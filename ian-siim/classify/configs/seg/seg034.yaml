@@ -1,0 +1,90 @@
+experiment:
+  seed: 88
+  save_dir: ../experiments/classify/
+
+
+data: 
+  annotations: ../data/covid/train_kfold_cleaned_w_bboxes_yuji.csv
+  data_dir: ../data/covid/train_pngs/
+  input: filename
+  target: [negative, atypical, indeterminate, typical, none]
+  outer_fold: 0
+  dataset:
+    name: SegmentClassify
+    params:
+      flip: true
+      verbose: true
+
+
+transform:
+  resize:
+    name: resize_ignore
+    params:
+      imsize: [512, 512]
+  augment:
+    name: grayscale_augment
+    params:
+      n: 3
+      p: 0.9
+  crop:
+    null
+  preprocess: 
+    name: Preprocessor
+    params:
+      image_range: [0, 255]
+      input_range: [0, 1]
+      mean: [0.5, 0.5, 0.5]
+      sdev: [0.5, 0.5, 0.5]
+
+
+task: 
+  name: HybridTask
+  params: 
+    mixaug:
+      mixup: 0.4
+
+
+model:
+  name: NetSMPHybrid
+  params:
+    segmentation_model: MAnet
+    encoder_name: timm-efficientnet-b6
+    classes: 1
+    segment_dropout: 0.2
+    load_pretrained: ../experiments/classify/mk032/sbn/checkpoints/epoch004-vm0.8763.ckpt
+    aux_params:
+      dropout: 0.2
+      classes: 5
+
+
+loss:
+  name: MixHybridClsSegLoss
+  params:
+    seg_weight: 1.0
+    use_weighted_bce: False
+
+
+optimizer:
+  name: AdamW
+  params:
+    lr: 3.0e-4
+    weight_decay: 5.0e-4
+
+
+scheduler: 
+  name: CosineAnnealingLR
+  params:
+    final_lr: 1.0e-6
+
+
+train:
+  batch_size: 16
+  num_epochs: 10
+
+
+evaluate: 
+  metrics: [AUROC, AVP]
+  monitor: avp_mean
+  mode: max
+
+

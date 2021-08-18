@@ -1,0 +1,12 @@
+{
+    "INPUT_DIR": "input",
+    "RESULT_DIR": "results",
+    "TRAIN_JPG_DIR": "input/images/train/",
+    "TRAIN_FOR_CLASSIFICATION_PATH": "input/train_for_classification.csv",
+    "TRAIN_FOR_DETECTION_PATH": "input/train_for_detection.csv",
+    "TRAIN_SIZE_DF_PATH": "input/train_with_size.csv",
+    "YOLO_OOF_PATH": "input/yolo_oof.csv",
+    "CHEXPERT_PRETRAINED_PATH": "input/chexpert_class14_fold0.pt",
+    "YOLO_YAML_PATH": "../yolo_yaml/mixup05_2.yaml",
+    "YOLO_RSNA_PRETRAINED_PATH": "../input/yolo_rsna_best"
+}

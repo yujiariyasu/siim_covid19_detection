@@ -1,0 +1,85 @@
+experiment:
+  seed: 88
+  save_dir: ../experiments/classify/
+
+
+data: 
+  annotations: ../data/covid/train_kfold_cleaned_w_bboxes_yuji.csv
+  data_dir: ../data/covid/train_pngs/
+  input: filename
+  target: [negative, atypical, indeterminate, typical, none]
+  outer_fold: 0
+  dataset:
+    name: SegmentClassify
+    params:
+      flip: true
+      verbose: true
+
+
+transform:
+  resize:
+    name: resize_ignore
+    params:
+      imsize: [512, 512]
+  augment:
+    name: simple_augment
+    params:
+      p: 1.0
+  crop:
+    null
+  preprocess: 
+    name: Preprocessor
+    params:
+      image_range: [0, 255]
+      input_range: [0, 1]
+      mean: [0.5, 0.5, 0.5]
+      sdev: [0.5, 0.5, 0.5]
+
+
+task: 
+  name: HybridTask
+  params: 
+
+
+model:
+  name: SwinFPN
+  params:
+    load_pretrained_encoder: ../experiments/classify/yuji/chexpert_swin_last.ckpt
+    decoder_dropout: 0.2
+    classes: 1
+    aux_params:
+      dropout: 0.2
+      classes: 5
+
+
+loss:
+  name: HybridClsSegLoss
+  params:
+    seg_weight: 1.0
+    use_weighted_bce: False
+
+
+
+optimizer:
+  name: Adam
+  params:
+    lr: 1.0e-4
+
+
+scheduler: 
+  name: CosineAnnealingLR
+  params:
+    final_lr: 1.0e-6
+
+
+train:
+  batch_size: 6
+  num_epochs: 10
+
+
+evaluate: 
+  metrics: [AUROC, AVP]
+  monitor: avp_mean
+  mode: max
+
+

@@ -1,0 +1,87 @@
+experiment:
+  seed: 88
+  save_dir: ../experiments/detect/
+
+
+data: 
+  annotations: ../data/covid/train_bbox_annotations_effdet.pkl
+  data_dir: ../data/covid/train_pngs/
+  outer_fold: 0
+  dataset:
+    name: CXRDataset
+    params:
+      flip: true
+      verbose: true
+  exclude_negative_train: true
+
+
+transform:
+  resize:
+    name: resize_ignore
+    params:
+      imsize: [512, 512]
+  augment:
+    name: grayscale_augment
+    params:
+      p: 0.9
+      n: 3
+  preprocess:
+    name: Preprocessor
+    params:
+      image_range: [0, 255]
+      input_range: [0, 1]
+      mean: [0.5, 0.5, 0.5]
+      sdev: [0.5, 0.5, 0.5]
+
+
+task: 
+  name: DetectionTask
+  params: 
+
+
+model:
+  name: EffDet
+  params:
+    base: tf_efficientdet_d7x
+    backbone: tf_efficientnet_b7
+    num_classes: 1
+    pretrained: true
+    image_size: [512, 512]
+  load_pretrained: ../experiments/detect/rsna002/sbn/checkpoints/last.ckpt
+
+
+loss:
+  name: DetectionLoss
+  params:
+
+
+
+optimizer:
+  name: AdamW
+  params:
+    lr: 5.0e-6
+    weight_decay: 5.0e-4
+
+
+scheduler: 
+  name: CustomOneCycleLR
+  params:
+    max_lr: 5.0e-4
+    final_lr: 0.0
+    pct_start: 0.1
+
+
+train:
+  batch_size: 4
+  num_epochs: 12
+
+
+evaluate: 
+  metrics: 
+    - name: mAP
+      params: 
+        num_classes: 1
+  monitor: map
+  mode: max
+
+

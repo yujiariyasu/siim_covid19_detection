@@ -1,0 +1,86 @@
+experiment:
+  seed: 88
+  save_dir: ../experiments/classify/
+
+
+data: 
+  annotations: ../data/covid/train_kfold_cleaned.csv
+  data_dir: ../data/covid/train_pngs/
+  input: filename
+  target: [negative, atypical, indeterminate, typical, opacity]
+  outer_fold: 0
+  dataset:
+    name: ImageDataset
+    params:
+      flip: true
+      verbose: true
+
+
+transform:
+  resize:
+    name: resize_ignore
+    params:
+      imsize: [640, 640]
+  augment:
+    name: grayscale_augment
+    params:
+      n: 3
+      p: 0.9
+  crop:
+    null
+  preprocess: 
+    name: Preprocessor
+    params:
+      image_range: [0, 255]
+      input_range: [0, 1]
+      mean: [0.5, 0.5, 0.5]
+      sdev: [0.5, 0.5, 0.5]
+
+
+task: 
+  name: ClassificationTask
+  params: 
+
+
+model:
+  name: Net2D
+  params:
+    backbone: tf_efficientnet_b4
+    pretrained: true
+    num_classes: 5
+    dropout: 0.2
+    in_channels: 3
+    multisample_dropout: true
+    pool: avg
+    load_pretrained: ../experiments/classify/mk023/sbn/checkpoints/last.ckpt
+
+
+loss:
+  name: BCEWithLogitsLoss
+  params:
+
+
+optimizer:
+  name: AdamW
+  params:
+    lr: 3.0e-4
+    weight_decay: 5.0e-4
+
+
+scheduler: 
+  name: CosineAnnealingLR
+  params:
+    final_lr: 1.0e-6
+
+
+train:
+  batch_size: 4
+  num_epochs: 4
+
+
+evaluate: 
+  metrics: [AUROC, AVP]
+  monitor: avp_mean
+  mode: max
+
+

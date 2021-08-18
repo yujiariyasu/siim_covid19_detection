@@ -1,0 +1,87 @@
+experiment:
+  seed: 88
+  save_dir: ../experiments/classify/
+
+
+data: 
+  annotations: ../data/covid/train_kfold_cleaned_w_bboxes.csv
+  data_dir: ../data/covid/train_pngs/
+  input: filename
+  target: [negative, atypical, indeterminate, typical, opacity]
+  outer_fold: 0
+  dataset:
+    name: SegmentClassify
+    params:
+      flip: true
+      verbose: true
+
+
+transform:
+  resize:
+    name: resize_ignore
+    params:
+      imsize: [512, 512]
+  augment:
+    name: grayscale_augment
+    params:
+      n: 3
+      p: 0.9
+  crop:
+    null
+  preprocess: 
+    name: Preprocessor
+    params:
+      image_range: [0, 255]
+      input_range: [0, 1]
+      mean: [0.5, 0.5, 0.5]
+      sdev: [0.5, 0.5, 0.5]
+
+
+task: 
+  name: HybridTask
+  params: 
+
+
+model:
+  name: NetSMPHybrid
+  params:
+    segmentation_model: DeepLabV3Plus
+    encoder_name: timm-efficientnet-b4
+    classes: 1
+    segment_dropout: 0.2
+    load_pretrained: ../experiments/classify/mk001/sbn/checkpoints/last.ckpt
+    aux_params:
+      dropout: 0.2
+      classes: 5
+
+
+loss:
+  name: HybridClsSegLoss
+  params:
+    seg_weight: 0.2
+
+
+optimizer:
+  name: AdamW
+  params:
+    lr: 3.0e-4
+    weight_decay: 5.0e-4
+
+
+scheduler: 
+  name: CosineAnnealingLR
+  params:
+    final_lr: 1.0e-6
+
+
+train:
+  batch_size: 4
+  num_epochs: 6
+
+
+evaluate: 
+  metrics: [AUROC, AVP]
+  monitor: avp_mean
+  mode: max
+
+

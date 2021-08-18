@@ -1,0 +1,87 @@
+experiment:
+  seed: 88
+  save_dir: ../experiments/classify/
+
+
+data: 
+  annotations: /orange/derek.merck/chexpert/data/view_subset_v2.csv
+  data_dir: /orange/derek.merck/chexpert/data/
+  input: filename
+  target: [ap, pa, lat]
+  outer_fold: 0
+  dataset:
+    name: ImageDataset
+    params:
+      flip: true
+      verbose: true
+      add_invert_label: true
+
+
+
+transform:
+  resize:
+    name: resize_ignore
+    params:
+      imsize: [512, 512]
+  augment:
+    name: grayscale_augment
+    params:
+      n: 3
+      p: 0.9
+  crop:
+    null
+  preprocess: 
+    name: Preprocessor
+    params:
+      image_range: [0, 255]
+      input_range: [0, 1]
+      mean: [0.5, 0.5, 0.5]
+      sdev: [0.5, 0.5, 0.5]
+
+
+task: 
+  name: ClassificationTask
+  params: 
+
+
+model:
+  name: Net2D
+  params:
+    backbone: tf_efficientnet_b4
+    pretrained: true
+    num_classes: 4
+    dropout: 0.2
+    in_channels: 3
+    multisample_dropout: true
+    pool: avg
+
+
+loss:
+  name: BCEWithLogitsLoss
+  params:
+
+
+optimizer:
+  name: AdamW
+  params:
+    lr: 3.0e-4
+    weight_decay: 5.0e-4
+
+
+scheduler: 
+  name: CosineAnnealingLR
+  params:
+    final_lr: 0.0
+
+
+train:
+  batch_size: 8
+  num_epochs: 1
+
+
+evaluate: 
+  metrics: [AUROC]
+  monitor: auc_mean
+  mode: max
+
+
